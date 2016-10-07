@@ -53,9 +53,89 @@ def read_petrel_points(filename):
         return np.loadtxt(s)
 
 
+def read_petrel_tops(filename):
+    """
+    Read a Petrel tops file. Returns a dictionary.
+
+    TODO:
+        Do something with Comments and Fields.
+    """
+    with open(filename) as f:
+
+        comments = []
+        fields = []
+        in_header = False
+
+        while True:
+            line = f.readline().strip()
+
+            if line.startswith('#'):
+                comments.append(line.strip('# '))
+            elif line.startswith('VERSION'):
+                # version = line.split()[-1]
+                pass
+            elif line.startswith('BEGIN'):
+                in_header = True
+            elif line.startswith('END'):
+                in_header = False
+                break
+            elif in_header:
+                fields.append(line.strip())
+            else:
+                break
+
+        wellidx = fields.index('Well')
+        surfidx = fields.index('Surface')
+        mdidx = fields.index('MD')
+
+        tops = {}
+        for line in f.readlines():
+            d = line.split()
+            well = d[wellidx].strip('"')
+            surf = d[surfidx].strip('"')
+            val = float(d[mdidx].strip("'"))
+            if well not in tops:
+                tops[well] = [{surf: val}]
+            else:
+                tops[well].append({surf: val})
+
+        return tops
+
+
 def read_petrel_horizon(filename):
     """
     Read a Petrel 2D IESX horizon file. Return an array.
+
+    """
+    with open(filename) as f:
+
+        comments = []
+        snapping_params = []
+        in_header = False
+
+        while True:
+            line = f.readline().strip()
+
+            if line.startswith('P'):  # 'P' as in 'PROFILE'
+                comments.append(line)
+            elif line.startswith('S'):
+                snapping_params = line
+                pass
+            elif line.startswith('EOD'):
+                in_header = False
+                break
+            else:
+                break
+
+        d = f.read()
+        s = StringIO(d)
+
+        return np.loadtxt(s)
+
+
+def read_petrel_horizons(filename):
+    """
+    Read a Petrel 2D IESX horizon file. Return a dict.
 
     """
     pass
